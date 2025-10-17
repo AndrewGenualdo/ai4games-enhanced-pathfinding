@@ -23,10 +23,10 @@ public class Pathfinding : MonoBehaviour
         RaycastHit hit;
         Vector3 lastPoint = path[path.Count - 1];
         //https://docs.unity3d.com/ScriptReference/Physics.Linecast.html
-        /*if (Physics.Linecast(lastPoint, goal, null, hit))
+        if (Physics.Linecast(lastPoint, goal, out hit))
         {
-
-        }*/
+            
+        }
 
         path.Add(goal);
 
