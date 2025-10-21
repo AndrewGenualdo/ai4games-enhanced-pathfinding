@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Pathfinding : MonoBehaviour
@@ -7,12 +8,14 @@ public class Pathfinding : MonoBehaviour
 
     public static List<GameObject> obstacles;
     public static List<Vector3> path;
+    public GameObject goal;
 
     // Start is called before the first frame update
     void Start()
     {
         if(obstacles == null) obstacles = new List<GameObject>();
         if(path == null) path = new List<Vector3>();
+        Pathfind(goal.transform.position);
     }
 
     void Pathfind(Vector3 goal)
@@ -23,9 +26,9 @@ public class Pathfinding : MonoBehaviour
         RaycastHit hit;
         Vector3 lastPoint = path[path.Count - 1];
         //https://docs.unity3d.com/ScriptReference/Physics.Linecast.html
-        if (Physics.Linecast(lastPoint, goal, out hit))
+        if (Physics.Linecast(lastPoint, goal, out hit/*, 0, QueryTriggerInteraction.Ignore*/))
         {
-            
+            Debug.Log("Hit at: " + hit.point.x + ", " + hit.point.y + ", " + hit.point.z);
         }
 
         path.Add(goal);
