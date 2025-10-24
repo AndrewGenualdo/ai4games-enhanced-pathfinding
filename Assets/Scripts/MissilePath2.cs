@@ -12,6 +12,7 @@ public class MissilePath2 : MonoBehaviour
     private static List<PathNode> endNodes;
     public GameObject goal;
     public int maxDepth = 3;
+    public float distFromObject = 0.5f;
 
     private struct PathNode
     {
@@ -143,7 +144,7 @@ public class MissilePath2 : MonoBehaviour
                     Vector3 worldVertex = hit.collider.transform.TransformPoint(vertices[i]);
                     Vector3 center = hit.collider.bounds.center;
                     Vector3 dir = (worldVertex - center).normalized;
-                    float offsetAmount = (worldVertex - center).magnitude * 0.2f;
+                    float offsetAmount = distFromObject;
                     Vector3 offsetVertex = worldVertex + dir * offsetAmount;
 
                     RaycastHit hit2;
