@@ -7,10 +7,11 @@ using System.Linq;
 
 public class MissilePath2 : MonoBehaviour
 {
-    public static List<GameObject> obstacles;
     private static List<PathNode> path;
     public static List<Vector3> finalPath;
+    private static List<PathNode> endNodes;
     public GameObject goal;
+    public int maxDepth = 3;
 
     private struct PathNode
     {
@@ -18,9 +19,18 @@ public class MissilePath2 : MonoBehaviour
         private Vector3 pos;
         private int parentIndex;
         public List<int> nodes;
+        private float distance;
 
-        public PathNode(Vector3 pos, int parentIndex)
+        public PathNode(Vector3 pos, int parentIndex, float distance)
         {
+            if(parentIndex != -1)
+            {
+                this.distance = path[parentIndex].distance + distance;
+            }
+            else
+            {
+                this.distance = 0;
+            }
             this.pos = pos;
             this.parentIndex = parentIndex;
             this.nodes = new List<int>();
@@ -45,115 +55,147 @@ public class MissilePath2 : MonoBehaviour
         {
             return pos;
         }
+
+        public float GetDistance()
+        {
+            return distance;
+        }
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        if (obstacles == null) obstacles = new List<GameObject>();
         if (path == null) path = new List<PathNode>();
         if (finalPath == null) finalPath = new List<Vector3>();
+        if (endNodes == null) endNodes = new List<PathNode>();
         if(goal != null) Pathfind(goal.transform.position);
         else Debug.Log("GOAL IS NULL!!!");
     }
 
     void Pathfind(Vector3 goal)
     {
-        /*finalPath.Clear();
-        finalPath.Add(this.transform.position);
-
-        RaycastHit hit;
-
-        //https://docs.unity3d.com/ScriptReference/Physics.Linecast.html
-        Vector3 lastPoint = finalPath[finalPath.Count - 1];
-        if (Physics.Linecast(lastPoint, goal, out hit))
-        {
-            Debug.Log("Hit at: " + hit.transform.position.x + ", " + hit.transform.position.y + ", " + hit.transform.position.z);
-            if(hit.transform.position == goal)
-            {
-                Debug.DrawLine(lastPoint, goal, Color.green);
-            }
-            else
-            {
-                Debug.DrawLine(lastPoint, hit.point, Color.yellow);
-            }
-            //if the raycast from the vertex, hits the object containing said vertex, skip it
-            //if the raycast hits the object before the vertex, skip it
-            //only compare graph paths at the very end
-
-        }
-        else
-        {
-            Debug.Log("Missed!");
-            Debug.DrawLine(lastPoint, goal, Color.red);
-        }
-
-        
-        finalPath.Add(goal);*/
         path.Clear();
         finalPath.Clear();
-        path.Add(new PathNode(this.transform.position, -1)); //-1 = head
-        int lastPoint = 0;
+        endNodes.Clear();
+        path.Add(new PathNode(this.transform.position, -1, 0)); //-1 = head
+        
+
+        Pathfind(path[0], 0, goal, 0, maxDepth);
+        if(endNodes.Count > 0)
+        {
+            float shortestPath = endNodes[0].GetDistance();
+            PathNode shortest = endNodes[0];
+            for (int i = 1; i < endNodes.Count; i++)
+            {
+                if (endNodes[i].GetDistance() < shortestPath)
+                {
+                    shortestPath = endNodes[i].GetDistance();
+                    shortest = endNodes[i];
+                }
+            }
+
+            finalPath.Add(shortest.GetPos());
+            int parentIndex = shortest.GetParent();
+            if(parentIndex != -1) finalPath.Add(path[parentIndex].GetPos());
+            while (parentIndex != -1)
+            {
+                parentIndex = path[parentIndex].GetParent();
+                if (parentIndex != -1)
+                {
+                    finalPath.Add(path[parentIndex].GetPos());
+                }
+            }
+
+            finalPath.Reverse();
+            finalPath.Add(goal);
+            DrawGraph(path[0]);
+        }
+        
+
+        
+    }
+
+    void Pathfind(PathNode node, int nodeIndex, Vector3 goal, int steps, int maxSteps)
+    {
+        if (steps >= maxSteps) return;
+        
         RaycastHit hit;
         //https://docs.unity3d.com/ScriptReference/Physics.Linecast.html
-        if (Physics.Linecast(path[lastPoint].GetPos(), goal, out hit))
+        if (Physics.Linecast(node.GetPos(), goal, out hit))
         {
-            Debug.DrawLine(path[lastPoint].GetPos(), hit.transform.position, Color.white);
-            if(hit.transform.position == goal)
+            
+
+            if (hit.transform.position == goal)
             {
                 //done, no further actions needed
-                path.Add(new PathNode(goal, lastPoint));
-                path[lastPoint].AddNode(path.Count - 1);
-                int parentIndex = path[path.Count - 1].GetParent();
-                finalPath.Add(path[parentIndex].GetPos());
-                while(parentIndex != -1)
-                {
-                    parentIndex = path[parentIndex].GetParent();
-                    if(parentIndex != -1)
-                    {
-                        finalPath.Add(path[parentIndex].GetPos());
-                    }
-                    
-                }
+                path.Add(new PathNode(goal, nodeIndex, (goal - node.GetPos()).magnitude));
+                node.AddNode(path.Count - 1);
+                endNodes.Add(node);
             }
             else
             {
-                /*Bounds bounds = hit.collider.bounds;
-                Vector3 boundPos = bounds.center;
-                for(int i = 0; i < 8; i++)
-                {
-                    Vector3 boundCorner = bounds.extents;
-                    if(i % 2 == 0) { boundCorner.x *= -1; } 
-                    if(Mathf.Round(i / 2) % 2 == 0) { boundCorner.y *= -1; }
-                    if(Mathf.Round(i / 4) % 2 == 0) { boundCorner.z *= -1; }
-                }*/
                 List<Vector3> vertices = new List<Vector3>();
                 hit.collider.gameObject.GetComponent<MeshFilter>().mesh.GetVertices(vertices);
                 vertices = vertices.Distinct().ToList();
-                for(int i = 0; i < vertices.Count; i++)
+                steps++;
+                for (int i = 0; i < vertices.Count; i++)
                 {
-                    Vector3 scaledVertex = vertices[i];
-                    scaledVertex.x *= hit.collider.transform.localScale.x;
-                    scaledVertex.y *= hit.collider.transform.localScale.y;
-                    scaledVertex.z *= hit.collider.transform.localScale.z;
-                    path.Add(new PathNode(scaledVertex + hit.transform.position, lastPoint));
-                    path[lastPoint].AddNode(path.Count - 1);
+                    Vector3 worldVertex = hit.collider.transform.TransformPoint(vertices[i]);
+                    Vector3 center = hit.collider.bounds.center;
+                    Vector3 dir = (worldVertex - center).normalized;
+                    float offsetAmount = (worldVertex - center).magnitude * 0.2f;
+                    Vector3 offsetVertex = worldVertex + dir * offsetAmount;
+
+                    RaycastHit hit2;
+                    bool valid = false;
+
+                    valid = !Physics.Linecast(node.GetPos(), offsetVertex, out hit2);
+                    if (!valid)
+                    {
+                        valid = hit2.collider.gameObject != hit.collider.gameObject;
+                    }
+                    int parentIndex = node.GetParent();
+                    while (parentIndex != -1)
+                    {
+                        if (path[parentIndex].GetPos() == offsetVertex)
+                        {
+                            valid = false;
+                            break;
+                        }
+                        parentIndex = path[parentIndex].GetParent();
+                    }
+                    if (valid)
+                    {
+                        path.Add(new PathNode(offsetVertex, nodeIndex, (offsetVertex - node.GetPos()).magnitude));
+                        node.AddNode(path.Count - 1);
+                        Pathfind(path[path.Count - 1], path.Count - 1, goal, steps, maxSteps);
+                    }
                 }
             }
         }
-        //Debug.Log(finalPath.Count);
-        finalPath.Reverse();
-        DrawGraph(path[0]);
     }
 
     void DrawGraph(PathNode node)
     {
         for(int i = 0; i < node.nodes.Count; i++)
         {
-            Debug.DrawLine(node.GetPos(), path[node.nodes[i]].GetPos(), Color.green);
+            DrawArrow(node.GetPos(), path[node.nodes[i]].GetPos(), Color.green);
             DrawGraph(path[node.nodes[i]]);
         }
         
+    }
+
+    void DrawArrow(Vector3 start, Vector3 end, Color color, float arrowHeadLength = 0.25f, float arrowHeadAngle = 10f)
+    {
+        Debug.DrawLine(start, end, color);
+        Vector3 direction = end - start;
+        if (direction == Vector3.zero) return;
+
+        Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * Vector3.forward;
+        Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 - arrowHeadAngle, 0) * Vector3.forward;
+
+        Debug.DrawRay(end, right * arrowHeadLength, color);
+        Debug.DrawRay(end, left * arrowHeadLength, color);
     }
 
     // Update is called once per frame
@@ -163,7 +205,7 @@ public class MissilePath2 : MonoBehaviour
         //Pathfind(goal.transform.position);
         for(int i = 0; i < finalPath.Count - 1; i++)
         {
-            Debug.DrawLine(finalPath[i], finalPath[i+1], Color.green);
+            DrawArrow(finalPath[i], finalPath[i+1], Color.yellow);
         }
     }
 }
