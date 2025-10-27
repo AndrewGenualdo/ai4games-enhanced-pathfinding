@@ -442,16 +442,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BoidTemplate: {fileID: 44152580347402220, guid: 0d4f137734c17934fa329c3d44a4fe1c, type: 3}
   ResetBoids: 0
-  NumBoids: 5
+  NumBoids: 20
   neighborhoodRadius: 5
   cohesionEnabled: 1
   cohesionStrenth: 1
   separationEnabled: 1
   separationStrenth: 1
   alignmentEnabled: 1
-  alignmentStrenth: 0.1
-  maximumVelocity: 1
+  alignmentStrenth: 1
+  centerAttractionEnabled: 1
+  centerAttractionStrenth: 1
+  maximumVelocity: 10
+  randomForceEnabled: 1
+  randomForceStrenth: 1
   centerObject: {fileID: 1669185134}
+  goal: {fileID: 0}
 --- !u!4 &1669185136
 Transform:
   m_ObjectHideFlags: 0

@@ -22,9 +22,18 @@ public class BoidScript : MonoBehaviour
     [SerializeField] bool alignmentEnabled = true;
     [SerializeField] float alignmentStrenth = 1;
 
+    [SerializeField] bool centerAttractionEnabled = true;
+    [SerializeField] float centerAttractionStrenth = 1;
+
     [SerializeField] float maximumVelocity = 1;
 
+    [SerializeField] bool randomForceEnabled = true;
+    [SerializeField] float randomForceStrenth = 1;
+
     [SerializeField] GameObject centerObject;
+
+    [SerializeField] GameObject goal;
+
 
     List<GameObject> BoidList = new List<GameObject>();
 
@@ -32,11 +41,15 @@ public class BoidScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+       // centerObject.GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
+
     }
 
     // Update is called once per frame
     void Update()
     {
+      //  centerObject.transform.position = centerObject.GetComponent<MissilePath2>().GetPathlocation(Time.time);
+
         if (ResetBoids)
         {
             foreach (GameObject boid in BoidList)
@@ -63,7 +76,8 @@ public class BoidScript : MonoBehaviour
         if (cohesionEnabled){ CalculateCohesion(); }
         if (separationEnabled){ CalculateSepartaion(); }
         if (alignmentEnabled){ CalculateAlignment(); }
-
+        if (centerAttractionEnabled){ CalculateCenterAttraction(); }
+        if (randomForceEnabled) { AddRandomForce(); }
         LimitVelocity();
     }
 
@@ -126,6 +140,7 @@ public class BoidScript : MonoBehaviour
 
     void CalculateAlignment()
     {
+
         foreach (var boid in BoidList)
         {
             Vector3 force = Vector3.zero;
@@ -134,9 +149,35 @@ public class BoidScript : MonoBehaviour
             {
                 force += neighbor.GetComponent<Rigidbody>().velocity;
             }
-            if (Neighborhood.Count != 0) { force /= Neighborhood.Count + 1; }
+            if (Neighborhood.Count != 0) { force /= (Neighborhood.Count + 1); }
 
-            boid.GetComponent<Rigidbody>().AddForce(force * alignmentStrenth);
+            boid.GetComponent<Rigidbody>().AddForce(-force * alignmentStrenth);
+        }
+    }
+
+    void CalculateCenterAttraction()
+    {
+     //   Debug.Log("caclulating center attraction");
+
+        foreach (var boid in BoidList)
+        {
+            Vector3 force = Vector3.zero;
+
+            force = centerObject.transform.position - boid.transform.position;
+
+            boid.GetComponent<Rigidbody>().AddForce(force * centerAttractionStrenth);
+        }
+    }
+
+    void AddRandomForce()
+    {
+        foreach (var boid in BoidList)
+        {
+            Vector3 force = Vector3.zero;
+
+            force = Random.onUnitSphere;
+
+            boid.GetComponent<Rigidbody>().AddForce(force * randomForceStrenth);
         }
     }
 
@@ -147,7 +188,7 @@ public class BoidScript : MonoBehaviour
             Vector3 velocity = boid.GetComponent<Rigidbody>().velocity;
             if (velocity.magnitude > maximumVelocity)
             {
-                velocity = velocity.normalized * maximumVelocity;
+                boid.GetComponent<Rigidbody>().velocity = velocity.normalized * maximumVelocity;
                 Debug.Log("clamping velocity");
             }
         }
