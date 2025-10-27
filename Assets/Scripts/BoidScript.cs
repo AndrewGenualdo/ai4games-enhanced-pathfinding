@@ -8,7 +8,7 @@ public class BoidScript : MonoBehaviour
 {
 
     [SerializeField] GameObject BoidTemplate;
-    [SerializeField] bool ResetBoids = false;
+    [SerializeField] public bool ResetBoids = false;
 
     [SerializeField] int NumBoids = 5;
     [SerializeField] float neighborhoodRadius = 5;
@@ -30,9 +30,9 @@ public class BoidScript : MonoBehaviour
     [SerializeField] bool randomForceEnabled = true;
     [SerializeField] float randomForceStrenth = 1;
 
-    [SerializeField] GameObject centerObject;
+    [SerializeField] public GameObject centerObject;
 
-    [SerializeField] GameObject goal;
+    [SerializeField] public GameObject goal;
 
 
     List<GameObject> BoidList = new List<GameObject>();
@@ -42,13 +42,15 @@ public class BoidScript : MonoBehaviour
     void Start()
     {
        centerObject.GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
-
+       
     }
+
+    public float startTime = 0;
 
     // Update is called once per frame
     void Update()
     {
-        centerObject.transform.position = centerObject.GetComponent<MissilePath2>().GetPathLocation(Time.time);
+        centerObject.transform.position = centerObject.GetComponent<MissilePath2>().GetPathLocation(Time.time - startTime);
 
         if (ResetBoids)
         {
@@ -189,7 +191,7 @@ public class BoidScript : MonoBehaviour
             if (velocity.magnitude > maximumVelocity)
             {
                 boid.GetComponent<Rigidbody>().velocity = velocity.normalized * maximumVelocity;
-                Debug.Log("clamping velocity");
+                //Debug.Log("clamping velocity");
             }
         }
     }

@@ -7,14 +7,15 @@ using System.Linq;
 
 public class MissilePath2 : MonoBehaviour
 {
-    private List<PathNode> path;
+    [SerializeField] public List<PathNode> path;
     public List<Vector3> finalPath;
     private List<PathNode> endNodes;
-    //public GameObject goal;
     public int maxDepth = 3;
     public float distFromObject = 0.5f;
+    LineRenderer lineRenderer;
 
-    private struct PathNode
+    [System.Serializable]
+    public struct PathNode
     {
         
         private Vector3 pos;
@@ -22,9 +23,9 @@ public class MissilePath2 : MonoBehaviour
         public List<int> nodes;
         private float distance;
 
-        public PathNode(Vector3 pos, int parentIndex, float distance)
+        public PathNode(Vector3 pos, int parentIndex)
         {
-            this.distance = distance;
+            this.distance = -1;
             this.pos = pos;
             this.parentIndex = parentIndex;
             this.nodes = new List<int>();
@@ -54,6 +55,26 @@ public class MissilePath2 : MonoBehaviour
         {
             return distance;
         }
+
+        public void SetDistance(float distance)
+        {
+            this.distance = distance;
+        }
+    }
+
+    float GetPathDistance(int childNode)
+    {
+        float totalDist = 0;
+        if (childNode == -1) return 0;
+        int lastIndex = childNode;
+        int parentIndex = path[lastIndex].GetParent();
+        while (parentIndex != -1)
+        {
+            totalDist += (path[parentIndex].GetPos() - path[lastIndex].GetPos()).magnitude;
+            lastIndex = parentIndex;
+            parentIndex = path[parentIndex].GetParent();
+        }
+        return totalDist;
     }
 
     // Start is called before the first frame update
@@ -62,8 +83,7 @@ public class MissilePath2 : MonoBehaviour
         if (path == null) path = new List<PathNode>();
         if (finalPath == null) finalPath = new List<Vector3>();
         if (endNodes == null) endNodes = new List<PathNode>();
-        //if(goal != null) GeneratePath(goal.transform.position, distFromObject);
-        //else Debug.Log("GOAL IS NULL!!!");
+        drawer = gameObject.AddComponent<LineDrawer>();
     }
 
     public void GeneratePath(Vector3 goal)
@@ -71,8 +91,8 @@ public class MissilePath2 : MonoBehaviour
         path.Clear();
         finalPath.Clear();
         endNodes.Clear();
-        path.Add(new PathNode(this.transform.position, -1, 0)); //-1 = head
-        
+        path.Add(new PathNode(this.transform.position, -1)); //-1 = head
+        path[path.Count - 1].SetDistance(GetPathDistance(path.Count - 1));
 
         Pathfind(path[0], 0, goal, 0, maxDepth);
         if(endNodes.Count > 0)
@@ -102,11 +122,21 @@ public class MissilePath2 : MonoBehaviour
 
             finalPath.Reverse();
             finalPath.Add(goal);
-            DrawGraph(path[0]);
         }
-        
 
+        drawer.BeginFrame();
+        DrawGraph(path[0]);
         
+    }
+
+    int CountLines(PathNode node)
+    {
+        int count = 0;
+        for(int i = 0; i < node.nodes.Count; i++)
+        {
+            count += CountLines(path[node.nodes[i]]);
+        }
+        return count + node.nodes.Count;
     }
 
     void Pathfind(PathNode node, int nodeIndex, Vector3 goal, int steps, int maxSteps)
@@ -123,7 +153,8 @@ public class MissilePath2 : MonoBehaviour
             {
                 //done, no further actions needed
                 float parentDist = node.GetParent() == -1 ? 0 : path[node.GetParent()].GetDistance();
-                path.Add(new PathNode(goal, nodeIndex, parentDist + (goal - node.GetPos()).magnitude));
+                path.Add(new PathNode(goal, nodeIndex));
+                path[path.Count - 1].SetDistance(GetPathDistance(path.Count - 1));
                 node.AddNode(path.Count - 1);
                 endNodes.Add(node);
             }
@@ -132,15 +163,13 @@ public class MissilePath2 : MonoBehaviour
                 
                 
                 Mesh mesh = hit.collider.gameObject.GetComponent<MeshFilter>().mesh;
-                /*List<Vector3> vertices = new List<Vector3>();
-                mesh.GetVertices(vertices);*/
 
                 //START NEW STUFF
                 List<Vector3> tempVerts = new List<Vector3>();
                 List<Vector3> vertices = new List<Vector3>();
                 mesh.GetVertices(tempVerts);
 
-                for(int i = 0; i < tempVerts.Count; i+=3)
+                for(int i = 0; i + 2 < tempVerts.Count; i+=3)
                 {
                     vertices.Add((tempVerts[i] + tempVerts[i + 1]) * 0.5f);
                     vertices.Add((tempVerts[i + 1] + tempVerts[i + 2]) * 0.5f);
@@ -168,20 +197,40 @@ public class MissilePath2 : MonoBehaviour
                     {
                         valid = hit2.collider.gameObject != hit.collider.gameObject;
                     }
-                    int parentIndex = node.GetParent();
-                    while (parentIndex != -1)
+                    /*if(valid)
                     {
-                        if (path[parentIndex].GetPos() == offsetVertex)
+                        int parentIndex = node.GetParent();
+                        while (parentIndex != -1)
                         {
-                            valid = false;
-                            break;
+                            if (path[parentIndex].GetPos() == offsetVertex)
+                            {
+                                valid = false;
+                                break;
+                            }
+                            parentIndex = path[parentIndex].GetParent();
                         }
-                        parentIndex = path[parentIndex].GetParent();
+                    }*/
+                    float parentDist = GetPathDistance(node.GetParent());
+                    float dist = parentDist + (offsetVertex - node.GetPos()).magnitude;
+
+                    if (valid)
+                    {
+                        for(int j = 0; j < path.Count; j++)
+                        {
+                            if (path[j].GetPos() == offsetVertex)
+                            {
+                                if (path[j].GetDistance() < dist)
+                                {
+                                    valid = false;
+                                    break;
+                                }
+                            }
+                        }
                     }
                     if (valid)
                     {
-                        float parentDist = node.GetParent() == -1 ? 0 : path[node.GetParent()].GetDistance();
-                        path.Add(new PathNode(offsetVertex, nodeIndex, parentDist + (offsetVertex - node.GetPos()).magnitude));
+                        path.Add(new PathNode(offsetVertex, nodeIndex));
+                        path[path.Count - 1].SetDistance(GetPathDistance(path.Count - 1));
                         node.AddNode(path.Count - 1);
                         Pathfind(path[path.Count - 1], path.Count - 1, goal, steps, maxSteps);
                     }
@@ -190,26 +239,30 @@ public class MissilePath2 : MonoBehaviour
         }
     }
 
+    public LineDrawer drawer;
+
     void DrawGraph(PathNode node)
     {
-        for(int i = 0; i < node.nodes.Count; i++)
+        for (int i = 0; i < node.nodes.Count; i++)
         {
-            DrawArrow(node.GetPos(), path[node.nodes[i]].GetPos(), Color.green);
+            Vector3 p1 = node.GetPos();
+            Vector3 p2 = path[node.nodes[i]].GetPos();
+            bool isPath = false;
+            for(int j = 0; j < finalPath.Count - 1; j++)
+            {
+                if(p1 == finalPath[j] && p2 == finalPath[j+1]) { isPath = true; break; }
+            }
+            if(isPath)
+            {
+                drawer.DrawLine(p1, p2, Color.blue, Color.yellow, 0.05f);
+            }
+            else
+            {
+                drawer.DrawLine(p1, p2, Color.red, Color.green, 0.005f);
+            }
+                
             DrawGraph(path[node.nodes[i]]);
         }
-    }
-
-    void DrawArrow(Vector3 start, Vector3 end, Color color, float arrowHeadLength = 0.25f, float arrowHeadAngle = 10f)
-    {
-        Debug.DrawLine(start, end, color);
-        Vector3 direction = end - start;
-        if (direction == Vector3.zero) return;
-
-        Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * Vector3.forward;
-        Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 - arrowHeadAngle, 0) * Vector3.forward;
-
-        Debug.DrawRay(end, right * arrowHeadLength, color);
-        Debug.DrawRay(end, left * arrowHeadLength, color);
     }
 
     public Vector3 GetPathLocation(float distance)
@@ -226,18 +279,13 @@ public class MissilePath2 : MonoBehaviour
             }
             dist -= lineDist;
         }
-        return finalPath[finalPath.Count -1];
+
+        return finalPath[finalPath.Count - 1];
     }
 
     // Update is called once per frame
     void Update()
-    {    //    DrawGraph(path[0]);
-
-        //GeneratePath(goal.transform.position, distFromObject);
-        for(int i = 0; i < finalPath.Count - 1; i++)
-        {
-            DrawArrow(finalPath[i], finalPath[i+1], Color.yellow);
-           
-        }
+    {
+        
     }
 }
