@@ -41,14 +41,14 @@ public class BoidScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-       // centerObject.GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
+       centerObject.GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
 
     }
 
     // Update is called once per frame
     void Update()
     {
-      //  centerObject.transform.position = centerObject.GetComponent<MissilePath2>().GetPathlocation(Time.time);
+        centerObject.transform.position = centerObject.GetComponent<MissilePath2>().GetPathLocation(Time.time);
 
         if (ResetBoids)
         {

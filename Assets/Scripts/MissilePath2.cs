@@ -57,7 +57,7 @@ public class MissilePath2 : MonoBehaviour
     }
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         if (path == null) path = new List<PathNode>();
         if (finalPath == null) finalPath = new List<Vector3>();
@@ -66,9 +66,8 @@ public class MissilePath2 : MonoBehaviour
         //else Debug.Log("GOAL IS NULL!!!");
     }
 
-    void GeneratePath(Vector3 goal, float distFromObject)
+    public void GeneratePath(Vector3 goal)
     {
-        this.distFromObject = distFromObject;
         path.Clear();
         finalPath.Clear();
         endNodes.Clear();
@@ -138,8 +137,9 @@ public class MissilePath2 : MonoBehaviour
 
                 //START NEW STUFF
                 List<Vector3> tempVerts = new List<Vector3>();
-                mesh.GetVertices(tempVerts);
                 List<Vector3> vertices = new List<Vector3>();
+                mesh.GetVertices(tempVerts);
+
                 for(int i = 0; i < tempVerts.Count; i+=3)
                 {
                     vertices.Add((tempVerts[i] + tempVerts[i + 1]) * 0.5f);
@@ -212,7 +212,7 @@ public class MissilePath2 : MonoBehaviour
         Debug.DrawRay(end, left * arrowHeadLength, color);
     }
 
-    Vector3 GetPathLocation(float distance)
+    public Vector3 GetPathLocation(float distance)
     {
         float dist = distance;
         for(int i = 0; i < finalPath.Count - 1; i++)
@@ -226,16 +226,18 @@ public class MissilePath2 : MonoBehaviour
             }
             dist -= lineDist;
         }
-        return Vector3.zero;
+        return finalPath[finalPath.Count -1];
     }
 
     // Update is called once per frame
     void Update()
-    {
+    {    //    DrawGraph(path[0]);
+
         //GeneratePath(goal.transform.position, distFromObject);
         for(int i = 0; i < finalPath.Count - 1; i++)
         {
             DrawArrow(finalPath[i], finalPath[i+1], Color.yellow);
+           
         }
     }
 }
