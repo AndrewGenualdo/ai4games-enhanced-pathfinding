@@ -9,13 +9,13 @@ public class MissilePath2 : MonoBehaviour
 {
     [SerializeField] public List<PathNode> path;
     public List<Vector3> finalPath;
-    private List<PathNode> endNodes;
+    private List<int> endNodes;
     public int maxDepth = 3;
     public float distFromObject = 0.5f;
-    LineRenderer lineRenderer;
+    public LineDrawer drawer;
 
     [System.Serializable]
-    public struct PathNode
+    public class PathNode
     {
         
         private Vector3 pos;
@@ -82,7 +82,7 @@ public class MissilePath2 : MonoBehaviour
     {
         if (path == null) path = new List<PathNode>();
         if (finalPath == null) finalPath = new List<Vector3>();
-        if (endNodes == null) endNodes = new List<PathNode>();
+        if (endNodes == null) endNodes = new List<int>();
         drawer = gameObject.AddComponent<LineDrawer>();
     }
 
@@ -97,14 +97,14 @@ public class MissilePath2 : MonoBehaviour
         Pathfind(path[0], 0, goal, 0, maxDepth);
         if(endNodes.Count > 0)
         {
-            float shortestPath = endNodes[0].GetDistance();
-            PathNode shortest = endNodes[0];
+            float shortestPath = path[endNodes[0]].GetDistance();
+            PathNode shortest = path[endNodes[0]];
             for (int i = 1; i < endNodes.Count; i++)
             {
-                if (endNodes[i].GetDistance() < shortestPath)
+                if (path[endNodes[i]].GetDistance() < shortestPath)
                 {
-                    shortestPath = endNodes[i].GetDistance();
-                    shortest = endNodes[i];
+                    shortestPath = path[endNodes[i]].GetDistance();
+                    shortest = path[endNodes[i]];
                 }
             }
 
@@ -129,16 +129,6 @@ public class MissilePath2 : MonoBehaviour
         
     }
 
-    int CountLines(PathNode node)
-    {
-        int count = 0;
-        for(int i = 0; i < node.nodes.Count; i++)
-        {
-            count += CountLines(path[node.nodes[i]]);
-        }
-        return count + node.nodes.Count;
-    }
-
     void Pathfind(PathNode node, int nodeIndex, Vector3 goal, int steps, int maxSteps)
     {
         if (steps >= maxSteps) return;
@@ -156,27 +146,30 @@ public class MissilePath2 : MonoBehaviour
                 path.Add(new PathNode(goal, nodeIndex));
                 path[path.Count - 1].SetDistance(GetPathDistance(path.Count - 1));
                 node.AddNode(path.Count - 1);
-                endNodes.Add(node);
+                endNodes.Add(path.Count - 1);
             }
             else
             {
-                
-                
-                Mesh mesh = hit.collider.gameObject.GetComponent<MeshFilter>().mesh;
 
-                //START NEW STUFF
+                MeshFilter mf = hit.collider.GetComponent<MeshFilter>();
+                if (!mf || !mf.mesh) return;
+                Mesh mesh = mf.mesh;
+                
+
                 List<Vector3> tempVerts = new List<Vector3>();
-                List<Vector3> vertices = new List<Vector3>();
                 mesh.GetVertices(tempVerts);
-
-                for(int i = 0; i + 2 < tempVerts.Count; i+=3)
+                int[] tris = mesh.triangles;
+                List<Vector3> vertices = new List<Vector3>();
+                for (int i = 0; i < tris.Length; i += 3)
                 {
-                    vertices.Add((tempVerts[i] + tempVerts[i + 1]) * 0.5f);
-                    vertices.Add((tempVerts[i + 1] + tempVerts[i + 2]) * 0.5f);
-                    vertices.Add((tempVerts[i + 2] + tempVerts[i]) * 0.5f);
-                }
+                    Vector3 a = tempVerts[tris[i]];
+                    Vector3 b = tempVerts[tris[i + 1]];
+                    Vector3 c = tempVerts[tris[i + 2]];
 
-                //END NEW STUFF
+                    vertices.Add((a + b) * 0.5f);
+                    vertices.Add((b + c) * 0.5f);
+                    vertices.Add((c + a) * 0.5f);
+                }
 
 
                 vertices = vertices.Distinct().ToList();
@@ -197,7 +190,7 @@ public class MissilePath2 : MonoBehaviour
                     {
                         valid = hit2.collider.gameObject != hit.collider.gameObject;
                     }
-                    /*if(valid)
+                    if(valid)
                     {
                         int parentIndex = node.GetParent();
                         while (parentIndex != -1)
@@ -209,7 +202,7 @@ public class MissilePath2 : MonoBehaviour
                             }
                             parentIndex = path[parentIndex].GetParent();
                         }
-                    }*/
+                    }
                     float parentDist = GetPathDistance(node.GetParent());
                     float dist = parentDist + (offsetVertex - node.GetPos()).magnitude;
 
@@ -217,7 +210,7 @@ public class MissilePath2 : MonoBehaviour
                     {
                         for(int j = 0; j < path.Count; j++)
                         {
-                            if (path[j].GetPos() == offsetVertex)
+                            if ((path[j].GetPos() - offsetVertex).sqrMagnitude < 0.0001f) //for floating point erors
                             {
                                 if (path[j].GetDistance() < dist)
                                 {
@@ -239,8 +232,6 @@ public class MissilePath2 : MonoBehaviour
         }
     }
 
-    public LineDrawer drawer;
-
     void DrawGraph(PathNode node)
     {
         for (int i = 0; i < node.nodes.Count; i++)
@@ -250,7 +241,7 @@ public class MissilePath2 : MonoBehaviour
             bool isPath = false;
             for(int j = 0; j < finalPath.Count - 1; j++)
             {
-                if(p1 == finalPath[j] && p2 == finalPath[j+1]) { isPath = true; break; }
+                if((p1 - finalPath[j]).sqrMagnitude < 0.0001f && (p2 - finalPath[j + 1]).sqrMagnitude < 0.0001f) { isPath = true; break; }
             }
             if(isPath)
             {

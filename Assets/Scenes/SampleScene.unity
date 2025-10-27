@@ -1360,7 +1360,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   path: []
   finalPath: []
-  maxDepth: 5
+  maxDepth: 143
   distFromObject: 0.5
   drawer: {fileID: 0}
 --- !u!114 &1669185138
