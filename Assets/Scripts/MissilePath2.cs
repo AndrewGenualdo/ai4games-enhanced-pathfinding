@@ -195,22 +195,19 @@ public class MissilePath2 : MonoBehaviour
 
                 List<Vector3> tempVerts = new List<Vector3>();
                 List<Vector3> vertices = new List<Vector3>();
-                mesh.GetVertices(tempVerts);
-                int[] tris = mesh.triangles;
+                mesh.GetVertices(vertices);
+                /*int[] tris = mesh.triangles;
                 for (int i = 0; i + 2 < tris.Length; i += 3)
                 {
                     Vector3 a = hit.collider.transform.TransformPoint(tempVerts[tris[i]]);
                     Vector3 b = hit.collider.transform.TransformPoint(tempVerts[tris[i + 1]]);
                     Vector3 c = hit.collider.transform.TransformPoint(tempVerts[tris[i + 2]]);
 
-                    /*vertices.Add((a + b) * 0.5f);
-                    vertices.Add((b + c) * 0.5f);
-                    vertices.Add((c + a) * 0.5f);*/
                     vertices.Add(NearestPointOnFiniteLine(a, b, hit.point));
                     vertices.Add(NearestPointOnFiniteLine(b, c, hit.point));
                     vertices.Add(NearestPointOnFiniteLine(c, a, hit.point));
                 }
-                Debug.Log("Working...");
+                Debug.Log("Working...");*/
 
 
                 vertices = vertices.Distinct().ToList();
