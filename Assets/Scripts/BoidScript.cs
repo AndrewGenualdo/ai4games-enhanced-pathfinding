@@ -34,6 +34,9 @@ public class BoidScript : MonoBehaviour
 
     [SerializeField] public GameObject goal;
 
+    [SerializeField] public GameObject markerObject;
+
+    [SerializeField] float speed = 1;
 
     List<GameObject> BoidList = new List<GameObject>();
 
@@ -50,7 +53,7 @@ public class BoidScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        centerObject.transform.position = centerObject.GetComponent<MissilePath2>().GetPathLocation(Time.time - startTime);
+        centerObject.transform.position = centerObject.GetComponent<MissilePath2>().GetPathLocation((Time.time - startTime) * speed);
 
         if (ResetBoids)
         {
@@ -63,8 +66,9 @@ public class BoidScript : MonoBehaviour
         }
 
         while (BoidList.Count < NumBoids)
-        { 
-            BoidList.Add(Instantiate(BoidTemplate,centerObject.transform.position + Random.onUnitSphere * Random.Range(0.1f,neighborhoodRadius/2), Quaternion.identity));
+        {
+            BoidList.Add(Instantiate(BoidTemplate, centerObject.transform.position + Random.onUnitSphere * Random.Range(0, neighborhoodRadius / 2), Quaternion.identity));
+            BoidList[BoidList.Count - 1].GetComponent<Rigidbody>().velocity = Random.onUnitSphere * Random.Range(0, maximumVelocity);
         }
 
         while (BoidList.Count > NumBoids)
@@ -72,15 +76,17 @@ public class BoidScript : MonoBehaviour
             GameObject BoidToDelete = BoidList[0];
             BoidList.Remove(BoidToDelete);
             Destroy(BoidToDelete);
-
         }
-
-        if (cohesionEnabled){ CalculateCohesion(); }
-        if (separationEnabled){ CalculateSepartaion(); }
-        if (alignmentEnabled){ CalculateAlignment(); }
-        if (centerAttractionEnabled){ CalculateCenterAttraction(); }
-        if (randomForceEnabled) { AddRandomForce(); }
-        LimitVelocity();
+        foreach (var boid in BoidList)
+        { 
+            if (cohesionEnabled) { CalculateCohesion(boid); }
+            if (separationEnabled) { CalculateSepartaion(boid); }
+            if (alignmentEnabled) { CalculateAlignment(boid); }
+            if (centerAttractionEnabled) { CalculateCenterAttraction(boid); }
+            if (randomForceEnabled) { AddRandomForce(boid); }
+            LimitVelocity(boid);
+            PointTowardsVelocity(boid);
+        }
     }
 
     List<GameObject> GetNeighbors (GameObject thisBoid,float distance)
@@ -97,28 +103,29 @@ public class BoidScript : MonoBehaviour
         return Neighborhood;
     }
 
-    void CalculateCohesion()
+    void CalculateCohesion(GameObject boid)
     {
-        foreach (var boid in BoidList)
-        {
-            Vector3 force = Vector3.zero;
+ 
+            Vector3 force = boid.transform.position;
             List<GameObject> Neighborhood = GetNeighbors(boid, neighborhoodRadius);
             foreach (var neighbor in Neighborhood)
             {
                 force += neighbor.transform.position;
             }
-            force /= Neighborhood.Count;
+            force /= Neighborhood.Count +1;
+
+       // if ((int)Time.time % 2 == 0) 
+        { Instantiate(markerObject, force, Quaternion.identity); }
 
             force = force - boid.transform.position;
 
             boid.GetComponent<Rigidbody>().AddForce(force * cohesionStrenth);
-        }
+        
     }
 
-    void CalculateSepartaion()
+    void CalculateSepartaion(GameObject boid)
     {
-        foreach (var boid in BoidList)
-        {
+
             Vector3 force = Vector3.zero;
             List<GameObject> Neighborhood = GetNeighbors(boid, neighborhoodRadius);
             foreach (var neighbor in Neighborhood)
@@ -137,14 +144,13 @@ public class BoidScript : MonoBehaviour
           //  Debug.Log("force: " + force);
 
             boid.GetComponent<Rigidbody>().AddForce(force * separationStrenth);
-        }
+        
     }
 
-    void CalculateAlignment()
+    void CalculateAlignment(GameObject boid)
     {
 
-        foreach (var boid in BoidList)
-        {
+
             Vector3 force = Vector3.zero;
             List<GameObject> Neighborhood = GetNeighbors(boid, neighborhoodRadius);
             foreach (var neighbor in Neighborhood)
@@ -154,46 +160,48 @@ public class BoidScript : MonoBehaviour
             if (Neighborhood.Count != 0) { force /= (Neighborhood.Count + 1); }
 
             boid.GetComponent<Rigidbody>().AddForce(-force * alignmentStrenth);
-        }
+        
     }
 
-    void CalculateCenterAttraction()
+    void CalculateCenterAttraction(GameObject boid)
     {
      //   Debug.Log("caclulating center attraction");
 
-        foreach (var boid in BoidList)
-        {
+
             Vector3 force = Vector3.zero;
 
             force = centerObject.transform.position - boid.transform.position;
 
             boid.GetComponent<Rigidbody>().AddForce(force * centerAttractionStrenth);
-        }
+        
     }
 
-    void AddRandomForce()
+    void AddRandomForce(GameObject boid)
     {
-        foreach (var boid in BoidList)
-        {
+
             Vector3 force = Vector3.zero;
 
             force = Random.onUnitSphere;
 
             boid.GetComponent<Rigidbody>().AddForce(force * randomForceStrenth);
-        }
+        
     }
 
-    void LimitVelocity()
+    void LimitVelocity(GameObject boid)
     {
-        foreach(var boid in BoidList)
-        {
+
             Vector3 velocity = boid.GetComponent<Rigidbody>().velocity;
             if (velocity.magnitude > maximumVelocity)
             {
                 boid.GetComponent<Rigidbody>().velocity = velocity.normalized * maximumVelocity;
                 //Debug.Log("clamping velocity");
             }
-        }
+        
+    }
+
+    void PointTowardsVelocity(GameObject boid)
+    {
+            boid.GetComponent<Transform>().transform.LookAt(boid.GetComponent<Rigidbody>().velocity + boid.transform.position);
     }
 
 }
