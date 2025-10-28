@@ -1,9 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection.Emit;
-using Unity.VisualScripting;
-using UnityEngine;
 using System.Linq;
+using System.Threading.Tasks;
+using UnityEngine;
 
 public class MissilePath2 : MonoBehaviour
 {
@@ -86,7 +84,7 @@ public class MissilePath2 : MonoBehaviour
         drawer = gameObject.AddComponent<LineDrawer>();
     }
 
-    public void GeneratePath(Vector3 goal)
+    public void GeneratePathThreaded(Vector3 goal)
     {
         path.Clear();
         finalPath.Clear();
@@ -95,7 +93,7 @@ public class MissilePath2 : MonoBehaviour
         path[path.Count - 1].SetDistance(GetPathDistance(path.Count - 1));
 
         Pathfind(path[0], 0, goal, 0, maxDepth);
-        if(endNodes.Count > 0)
+        if (endNodes.Count > 0)
         {
             float shortestPath = path[endNodes[0]].GetDistance();
             PathNode shortest = path[endNodes[0]];
@@ -110,7 +108,7 @@ public class MissilePath2 : MonoBehaviour
 
             finalPath.Add(shortest.GetPos());
             int parentIndex = shortest.GetParent();
-            if(parentIndex != -1) finalPath.Add(path[parentIndex].GetPos());
+            if (parentIndex != -1) finalPath.Add(path[parentIndex].GetPos());
             while (parentIndex != -1)
             {
                 parentIndex = path[parentIndex].GetParent();
@@ -126,7 +124,45 @@ public class MissilePath2 : MonoBehaviour
 
         drawer.BeginFrame();
         DrawGraph(path[0]);
-        
+    }
+
+    public void GeneratePath(Vector3 goal)
+    {
+        Task.Run(() => GeneratePathThreaded(goal)).ContinueWith(task =>
+        {
+            Debug.Log("Done!");
+        }, TaskScheduler.FromCurrentSynchronizationContext());
+    }
+
+    void AddNode(int parentIndex, int childIndex)
+    {
+        /*PathNode childNode = path[childIndex];
+        RaycastHit hit;
+        int currPrevious = parentIndex;
+        int lastFree = parentIndex;
+        while(currPrevious != -1) 
+        {
+            if (!Physics.Linecast(childNode.GetPos(), path[currPrevious].GetPos(), out hit))
+            {
+                lastFree = currPrevious;
+            }
+            currPrevious = path[currPrevious].GetParent();
+        }
+        path[lastFree].AddNode(childIndex);*/
+        path[parentIndex].AddNode(childIndex);
+    }
+
+    //https://discussions.unity.com/t/how-do-i-find-the-closest-point-on-a-line/588895/9
+    public static Vector3 NearestPointOnFiniteLine(Vector3 start, Vector3 end, Vector3 pnt)
+    {
+        var line = (end - start);
+        var len = line.magnitude;
+        line.Normalize();
+
+        var v = pnt - start;
+        var d = Vector3.Dot(v, line);
+        d = Mathf.Clamp(d, 0f, len);
+        return start + line * d;
     }
 
     void Pathfind(PathNode node, int nodeIndex, Vector3 goal, int steps, int maxSteps)
@@ -145,7 +181,8 @@ public class MissilePath2 : MonoBehaviour
                 float parentDist = node.GetParent() == -1 ? 0 : path[node.GetParent()].GetDistance();
                 path.Add(new PathNode(goal, nodeIndex));
                 path[path.Count - 1].SetDistance(GetPathDistance(path.Count - 1));
-                node.AddNode(path.Count - 1);
+                AddNode(nodeIndex, path.Count - 1);
+                //node.AddNode(path.Count - 1);
                 endNodes.Add(path.Count - 1);
             }
             else
@@ -157,26 +194,30 @@ public class MissilePath2 : MonoBehaviour
                 
 
                 List<Vector3> tempVerts = new List<Vector3>();
+                List<Vector3> vertices = new List<Vector3>();
                 mesh.GetVertices(tempVerts);
                 int[] tris = mesh.triangles;
-                List<Vector3> vertices = new List<Vector3>();
-                for (int i = 0; i < tris.Length; i += 3)
+                for (int i = 0; i + 2 < tris.Length; i += 3)
                 {
-                    Vector3 a = tempVerts[tris[i]];
-                    Vector3 b = tempVerts[tris[i + 1]];
-                    Vector3 c = tempVerts[tris[i + 2]];
+                    Vector3 a = hit.collider.transform.TransformPoint(tempVerts[tris[i]]);
+                    Vector3 b = hit.collider.transform.TransformPoint(tempVerts[tris[i + 1]]);
+                    Vector3 c = hit.collider.transform.TransformPoint(tempVerts[tris[i + 2]]);
 
-                    vertices.Add((a + b) * 0.5f);
+                    /*vertices.Add((a + b) * 0.5f);
                     vertices.Add((b + c) * 0.5f);
-                    vertices.Add((c + a) * 0.5f);
+                    vertices.Add((c + a) * 0.5f);*/
+                    vertices.Add(NearestPointOnFiniteLine(a, b, hit.point));
+                    vertices.Add(NearestPointOnFiniteLine(b, c, hit.point));
+                    vertices.Add(NearestPointOnFiniteLine(c, a, hit.point));
                 }
+                Debug.Log("Working...");
 
 
                 vertices = vertices.Distinct().ToList();
                 steps++;
                 for (int i = 0; i < vertices.Count; i++)
                 {
-                    Vector3 worldVertex = hit.collider.transform.TransformPoint(vertices[i]);
+                    Vector3 worldVertex = vertices[i];
                     Vector3 center = hit.collider.bounds.center;
                     Vector3 dir = (worldVertex - center).normalized;
                     float offsetAmount = distFromObject;
@@ -224,7 +265,8 @@ public class MissilePath2 : MonoBehaviour
                     {
                         path.Add(new PathNode(offsetVertex, nodeIndex));
                         path[path.Count - 1].SetDistance(GetPathDistance(path.Count - 1));
-                        node.AddNode(path.Count - 1);
+                        AddNode(nodeIndex, path.Count - 1);
+                        //node.AddNode(path.Count - 1);
                         Pathfind(path[path.Count - 1], path.Count - 1, goal, steps, maxSteps);
                     }
                 }
@@ -269,6 +311,12 @@ public class MissilePath2 : MonoBehaviour
                 return Vector3.Lerp(finalPath[i], finalPath[i + 1], t);
             }
             dist -= lineDist;
+        }
+
+        if(finalPath.Count == 0)
+        {
+            Debug.Log("PATHFINDING FAILED");
+            return Vector3.zero;
         }
 
         return finalPath[finalPath.Count - 1];
