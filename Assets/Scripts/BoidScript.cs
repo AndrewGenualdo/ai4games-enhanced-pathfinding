@@ -38,6 +38,9 @@ public class BoidScript : MonoBehaviour
 
     [SerializeField] float speed = 1;
 
+    [SerializeField] float smoothing = 1;
+
+
     List<GameObject> BoidList = new List<GameObject>();
 
 
@@ -53,7 +56,13 @@ public class BoidScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        centerObject.transform.position = centerObject.GetComponent<MissilePath2>().GetPathLocation((Time.time - startTime) * speed);
+        float leng = centerObject.GetComponent<MissilePath2>().GetPathLength();
+        float dist = (Time.time - startTime) * speed;
+
+        Vector3 closeLoc =  centerObject.GetComponent<MissilePath2>().GetPathLocation(dist);
+        Vector3 farLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(leng/smoothing + dist);
+
+        centerObject.transform.position = closeLoc;
 
         if (ResetBoids)
         {
@@ -115,7 +124,7 @@ public class BoidScript : MonoBehaviour
             force /= Neighborhood.Count +1;
 
        // if ((int)Time.time % 2 == 0) 
-        { Instantiate(markerObject, force, Quaternion.identity); }
+      //  { Instantiate(markerObject, force, Quaternion.identity); }
 
             force = force - boid.transform.position;
 
