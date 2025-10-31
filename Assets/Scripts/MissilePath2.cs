@@ -274,6 +274,16 @@ public class MissilePath2 : MonoBehaviour
         return finalPath[finalPath.Count - 1];
     }
 
+    public float GetPathLength()
+    {
+        float length = 0;
+        for (int i = 0; i < finalPath.Count - 1; i++)
+        {
+            length += (finalPath[i] - finalPath[i + 1]).magnitude;
+        }
+        return length;
+    }
+
     // Update is called once per frame
     void Update()
     {
