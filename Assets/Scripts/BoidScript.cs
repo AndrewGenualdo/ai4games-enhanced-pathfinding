@@ -56,13 +56,17 @@ public class BoidScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float leng = centerObject.GetComponent<MissilePath2>().GetPathLength();
+        //float leng = centerObject.GetComponent<MissilePath2>().GetPathLength();
         float dist = (Time.time - startTime) * speed;
 
-        Vector3 closeLoc =  centerObject.GetComponent<MissilePath2>().GetPathLocation(dist);
-        Vector3 farLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(leng/smoothing + dist);
+        Vector3 closeLoc =  centerObject.transform.position;
+        Vector3 farLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(smoothing + dist);
 
-        centerObject.transform.position = closeLoc;
+        Vector3 smoothedLoc = (closeLoc + (farLoc - closeLoc).normalized * speed * Time.deltaTime);
+
+        if (dist % .5 <= .05) { centerObject.GetComponent<LineDrawer>().DrawLine(closeLoc, farLoc, Color.cyan, Color.magenta); }
+
+        centerObject.transform.position = smoothedLoc;
 
         if (ResetBoids)
         {

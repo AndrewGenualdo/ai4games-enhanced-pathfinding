@@ -1231,7 +1231,8 @@ MonoBehaviour:
   centerObject: {fileID: 1669185134}
   goal: {fileID: 765779125}
   markerObject: {fileID: 8467499806598880376, guid: 92b129f7e9a4b8b40ac1879bd77fc887, type: 3}
-  speed: 2
+  speed: 1
+  smoothing: 2
   startTime: 0
 --- !u!4 &1669185136
 Transform:
@@ -1265,7 +1266,7 @@ MonoBehaviour:
   path: []
   finalPath: []
   maxDepth: 143
-  distFromObject: 3
+  distFromObject: 1
   drawer: {fileID: 0}
 --- !u!114 &1669185138
 MonoBehaviour:
