@@ -48,7 +48,6 @@ public class BoidScript : MonoBehaviour
     void Start()
     {
        centerObject.GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
-       
     }
 
     public float startTime = 0;

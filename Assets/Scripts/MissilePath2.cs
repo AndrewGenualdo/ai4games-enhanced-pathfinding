@@ -91,6 +91,7 @@ public class MissilePath2 : MonoBehaviour
         path.Clear();
         finalPath.Clear();
         endNodes.Clear();
+        drawer.BeginFrame();
         path.Add(new PathNode(this.transform.position, -1)); //-1 = head
         path[path.Count - 1].SetDistance(GetPathDistance(path.Count - 1));
 
@@ -234,6 +235,11 @@ public class MissilePath2 : MonoBehaviour
 
     void DrawGraph(PathNode node)
     {
+        DrawGraph(node, 0);
+    }
+
+    void DrawGraph(PathNode node, int count)
+    {
         for (int i = 0; i < node.nodes.Count; i++)
         {
             Vector3 p1 = node.GetPos();
@@ -251,13 +257,21 @@ public class MissilePath2 : MonoBehaviour
             {
                 drawer.DrawLine(p1, p2, Color.red, Color.green, 0.005f);
             }
-
+            count++;
+            if (count > 500) return;
             DrawGraph(path[node.nodes[i]]);
         }
     }
 
     public Vector3 GetPathLocation(float distance)
     {
+
+        if(distance < 0)
+        {
+            Debug.Log("WHAT THE FUCK");
+            return Vector3.zero;
+        }
+
         float dist = distance;
         for (int i = 0; i < finalPath.Count - 1; i++)
         {
@@ -271,7 +285,7 @@ public class MissilePath2 : MonoBehaviour
             dist -= lineDist;
         }
 
-        return finalPath[finalPath.Count - 1];
+        return finalPath.Count == 0 ? Vector3.zero : finalPath[finalPath.Count - 1];
     }
 
     public float GetPathLength()
