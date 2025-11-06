@@ -2,10 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UIScript : MonoBehaviour
 {
+    [SerializeField] Button resetButton;
+    [SerializeField] Button addWallButton;
 
     [SerializeField] Button generatePathButton;
     [SerializeField] GameObject cam;
@@ -20,8 +23,18 @@ public class UIScript : MonoBehaviour
     {
         startPos = transform.position;
         generatePathButton.onClick.AddListener(GeneratePathButton);
+        resetButton.onClick.AddListener(Reset);
+
     }
 
+    private void AddWall()
+    {
+    }
+
+    private void Reset()
+    {
+        SceneManager.LoadScene(0);
+    }
     public void GeneratePathButton()
     {
         GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
@@ -73,8 +86,11 @@ public class UIScript : MonoBehaviour
 
         Vector3 rotDiff = Vector3.zero;
         if (Input.GetKey(KeyCode.Z)) rotDiff.x += Time.deltaTime * moveSpeed * 5;
-        if (Input.GetKey(KeyCode.X)) rotDiff.y += Time.deltaTime * moveSpeed * 5;
-        if (Input.GetKey(KeyCode.C)) rotDiff.z += Time.deltaTime * moveSpeed * 5;
+        if (Input.GetKey(KeyCode.X)) rotDiff.x -= Time.deltaTime * moveSpeed * 5;
+        if (Input.GetKey(KeyCode.C)) rotDiff.y += Time.deltaTime * moveSpeed * 5;
+        if (Input.GetKey(KeyCode.V)) rotDiff.y -= Time.deltaTime * moveSpeed * 5;
+        if (Input.GetKey(KeyCode.B)) rotDiff.z += Time.deltaTime * moveSpeed * 5;
+        if (Input.GetKey(KeyCode.N)) rotDiff.z -= Time.deltaTime * moveSpeed * 5;
         currentObj.transform.rotation = Quaternion.Euler(currentObj.transform.rotation.eulerAngles + rotDiff);
         if (currentObject != -2 && rotDiff != Vector3.zero) shouldReset = true;
 

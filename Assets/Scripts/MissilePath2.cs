@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection.Emit;
 using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using System.Linq;
 
 public class MissilePath2 : MonoBehaviour
 {
@@ -88,6 +89,27 @@ public class MissilePath2 : MonoBehaviour
 
     public void GeneratePath(Vector3 goal)
     {
+        int hitForward = 0;
+        int hitBack = 0;
+
+        Vector3 objVec = goal - this.transform.position;
+
+        foreach (RaycastHit hit in Physics.RaycastAll(goal, -objVec, objVec.magnitude))
+        {
+          //  Debug.Log("Backward: " + hit.point);
+            hitBack++;
+        }
+        foreach(RaycastHit hit in Physics.RaycastAll(this.transform.position, objVec, objVec.magnitude))
+        {
+          //  Debug.Log("Forward: " + hit.point);
+            hitForward++;
+        }
+
+        if (hitForward != hitBack){
+            Debug.Log("inequal casts"); return; 
+        }
+
+
         path.Clear();
         finalPath.Clear();
         endNodes.Clear();
@@ -132,7 +154,7 @@ public class MissilePath2 : MonoBehaviour
 
     void Pathfind(PathNode node, int nodeIndex, Vector3 goal, int steps, int maxSteps)
     {
-        if (steps >= maxSteps) return;
+        if (steps >= maxSteps) { Debug.Log("max steps"); return; }
 
         RaycastHit hit;
         //https://docs.unity3d.com/ScriptReference/Physics.Linecast.html

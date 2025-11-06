@@ -43,6 +43,7 @@ public class BoidScript : MonoBehaviour
 
     List<GameObject> BoidList = new List<GameObject>();
 
+    float distOffset = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -51,21 +52,29 @@ public class BoidScript : MonoBehaviour
     }
 
     public float startTime = 0;
+        float markerTime = 0;
 
     // Update is called once per frame
     void Update()
     {
         //float leng = centerObject.GetComponent<MissilePath2>().GetPathLength();
-        float dist = (Time.time - startTime) * speed;
+        float dist = ((Time.time - startTime) * speed) + distOffset;
 
         Vector3 closeLoc =  centerObject.transform.position;
         Vector3 farLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(smoothing + dist);
+        distOffset += smoothing - (closeLoc - farLoc).magnitude;
 
-        Vector3 smoothedLoc = (closeLoc + (farLoc - closeLoc).normalized * speed * Time.deltaTime);
+        Vector3 smoothedLoc = (closeLoc + (farLoc - closeLoc).normalized * speed * Time.deltaTime); //* (smoothing / Mathf.Abs((closeLoc - farLoc).magnitude)));
 
-        if (dist % .5 <= .05) { centerObject.GetComponent<LineDrawer>().DrawLine(closeLoc, farLoc, Color.cyan, Color.magenta); }
+        if (Time.time- markerTime>= 1) 
+        { 
+            centerObject.GetComponent<LineDrawer>().DrawLine(closeLoc, farLoc, Color.cyan, Color.magenta);
+            Instantiate(markerObject, farLoc, Quaternion.identity);
+            markerTime = Time.time;
+        }
 
         centerObject.transform.position = smoothedLoc;
+
 
         if (ResetBoids)
         {
