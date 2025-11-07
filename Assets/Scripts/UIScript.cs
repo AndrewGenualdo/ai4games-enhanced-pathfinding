@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -8,11 +9,16 @@ using UnityEngine.UI;
 public class UIScript : MonoBehaviour
 {
     [SerializeField] Button resetButton;
+
+    [SerializeField] Button restartButton;
     [SerializeField] Button addWallButton;
+    [SerializeField] Slider colorSlider;
+    public LineDrawer drawer;
 
     [SerializeField] Button generatePathButton;
     [SerializeField] GameObject cam;
     [SerializeField] GameObject goal;
+    [SerializeField] GameObject start;
     [SerializeField] GameObject displayText;
     [SerializeField] GameObject obstaclePrefab;
     [SerializeField] float moveSpeed = 10.0f;
@@ -25,12 +31,18 @@ public class UIScript : MonoBehaviour
         generatePathButton.onClick.AddListener(GeneratePathButton);
         resetButton.onClick.AddListener(Reset);
 
+        restartButton.onClick.AddListener(restart);
+        colorSlider.onValueChanged.AddListener(updateColors);
     }
 
     private void AddWall()
     {
     }
-
+    private void restart()
+    {
+        this.gameObject.transform.position = start.transform.position;
+        GeneratePathButton();
+    }
     private void Reset()
     {
         SceneManager.LoadScene(0);
@@ -42,24 +54,31 @@ public class UIScript : MonoBehaviour
         GetComponent<BoidScript>().ResetBoids = true;
     }
 
+    private void updateColors(float value)
+    {
+        colorSlider.GetComponentInChildren<Image>().color = Color.HSVToRGB(value, 1, 1);
+        drawer.setColor(Color.HSVToRGB(value, 1, 1));
+    }
+
+
     int currentObject = -3;
-    private string[] objectNames = { "Goal", "Camera" };
+    private string[] objectNames = { "Goal", "Camera" , "Start"};
 
     // Update is called once per frame
     void Update()
     {
         bool shouldReset = false;
         if (Input.GetKeyDown(KeyCode.RightArrow)) {
-            shouldReset = true;
+           // shouldReset = true;
             currentObject++;
         }
         
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            shouldReset = true;
+           // shouldReset = true;
             currentObject--;
         }
-        if (currentObject < -2) currentObject = -2;
+        if (currentObject < -3) currentObject = -3;
         if(currentObject >= obstacles.Count) currentObject = obstacles.Count - 1;
 
         GameObject currentObj = cam;
@@ -67,6 +86,7 @@ public class UIScript : MonoBehaviour
         {
             switch(currentObject)
             {
+                case -3: currentObj = start; break;
                 case -2: currentObj = cam; break;
                 case -1: currentObj = goal; break;
             }
@@ -97,11 +117,11 @@ public class UIScript : MonoBehaviour
         TMP_Text textMeshPro = displayText.GetComponent<TMP_Text>();
         if(currentObject < 0)
         {
-            textMeshPro.text = "[" + (currentObject + 2) + "] " + objectNames[-(currentObject + 1)];
+            textMeshPro.text = "[" + (currentObject + 3) + "] " + objectNames[-(currentObject + 1)];
         }
         else
         {
-             textMeshPro.text = "[" + (currentObject + 2) + "] Obstacle: " + currentObject.ToString();
+             textMeshPro.text = "[" + (currentObject + 3) + "] Obstacle: " + currentObject.ToString();
         }
 
         if(Input.GetKeyDown(KeyCode.Space))

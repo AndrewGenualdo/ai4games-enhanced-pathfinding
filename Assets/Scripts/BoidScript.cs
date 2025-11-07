@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 public class BoidScript : MonoBehaviour
 {
@@ -40,6 +40,8 @@ public class BoidScript : MonoBehaviour
 
     [SerializeField] float smoothing = 1;
 
+    [SerializeField] Slider colorSlider;
+    [SerializeField] Toggle lineToggle;
 
     List<GameObject> BoidList = new List<GameObject>();
 
@@ -51,9 +53,13 @@ public class BoidScript : MonoBehaviour
        centerObject.GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
     }
 
-    public float startTime = 0;
+     float startTime = 0;
         float markerTime = 0;
-
+    public void resetOffsets()
+    {
+        startTime = Time.time;
+        distOffset = 0;
+    }
     // Update is called once per frame
     void Update()
     {
@@ -66,10 +72,10 @@ public class BoidScript : MonoBehaviour
 
         Vector3 smoothedLoc = (closeLoc + (farLoc - closeLoc).normalized * speed * Time.deltaTime); //* (smoothing / Mathf.Abs((closeLoc - farLoc).magnitude)));
 
-        if (Time.time- markerTime>= 1) 
+        if (Time.time- markerTime>= .5 && lineToggle.isOn) 
         { 
-            centerObject.GetComponent<LineDrawer>().DrawLine(closeLoc, farLoc, Color.cyan, Color.magenta);
-            Instantiate(markerObject, farLoc, Quaternion.identity);
+            centerObject.GetComponent<LineDrawer>().DrawLine(closeLoc, farLoc, Color.HSVToRGB(colorSlider.value, 1, 1), Color.HSVToRGB(colorSlider.value, 1, 1));
+         //   Instantiate(markerObject, farLoc, Quaternion.identity);
             markerTime = Time.time;
         }
 

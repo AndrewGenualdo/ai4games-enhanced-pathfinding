@@ -5,10 +5,16 @@ using System.Reflection.Emit;
 using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MissilePath2 : MonoBehaviour
-{
+{   
+    [SerializeField] Slider colorSlider;
+    [SerializeField] Toggle lineToggle;
+
     [SerializeField] public List<PathNode> path;
+
+
     public List<Vector3> finalPath;
     private List<int> endNodes;
     public int maxDepth = 3;
@@ -84,7 +90,7 @@ public class MissilePath2 : MonoBehaviour
         if (path == null) path = new List<PathNode>();
         if (finalPath == null) finalPath = new List<Vector3>();
         if (endNodes == null) endNodes = new List<int>();
-        drawer = gameObject.AddComponent<LineDrawer>();
+       // drawer = gameObject.AddComponent<LineDrawer>();
     }
 
     public void GeneratePath(Vector3 goal)
@@ -148,7 +154,7 @@ public class MissilePath2 : MonoBehaviour
         }
 
         drawer.BeginFrame();
-        DrawGraph(path[0]);
+        if(lineToggle.isOn)DrawGraph(path[0]);
 
     }
 
@@ -273,7 +279,7 @@ public class MissilePath2 : MonoBehaviour
             }
             if (isPath)
             {
-                drawer.DrawLine(p1, p2, Color.blue, Color.yellow, 0.05f);
+                drawer.DrawLine(p1, p2,Color.HSVToRGB(colorSlider.value, 1,1), Color.HSVToRGB(colorSlider.value, 1, 1), 0.05f);
             }
             else
             {

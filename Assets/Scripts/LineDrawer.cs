@@ -61,6 +61,16 @@ public class LineDrawer : MonoBehaviour
         currentLine++;
     }
 
+    public void setColor(Color color)
+    {
+        foreach(LineRenderer line in lines)
+        {
+            line.endColor = color;
+            line.startColor = color;
+
+        }
+
+    }
     // Update is called once per frame
     void Update()
     {
