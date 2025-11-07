@@ -50,7 +50,7 @@ public class UIScript : MonoBehaviour
     public void GeneratePathButton()
     {
         GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
-        GetComponent<BoidScript>().startTime = Time.time;
+        GetComponent<BoidScript>().resetOffsets();
         GetComponent<BoidScript>().ResetBoids = true;
     }
 
