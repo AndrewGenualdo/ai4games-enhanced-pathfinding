@@ -91,7 +91,7 @@ public class BoidScript : MonoBehaviour
         if (centerObject.GetComponent<MissilePath2>().GetPathLength() == 0) { farLoc = this.gameObject.transform.position; }
 
         float distDiff = (closeLoc - farLoc).magnitude;
-        Debug.Log("start time: " + startTime + " time: " + time + " offset: " + smoothing / distDiff);
+       // Debug.Log("start time: " + startTime + " time: " + time + " offset: " + smoothing / distDiff);
 
      //   if (distDiff > smoothing) {pauseTime += Time.deltaTime; }
         if (distDiff > smoothing) { timeScale = Mathf.Pow( smoothing / distDiff, 10); }

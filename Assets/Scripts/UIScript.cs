@@ -82,6 +82,14 @@ public class UIScript : MonoBehaviour
            // shouldReset = true;
             currentObject--;
         }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            mouseControllingRotation = !mouseControllingRotation;
+            Cursor.visible = !mouseControllingRotation;
+
+        }
+
         if (currentObject < -3) currentObject = -3;
         if(currentObject >= obstacles.Count) currentObject = obstacles.Count - 1;
 
@@ -98,34 +106,67 @@ public class UIScript : MonoBehaviour
         {
             currentObj = obstacles[currentObject];
         }
+
+        var forward = cam.transform.forward;
+        var right = cam.transform.right;
+        forward.y = 0f;
+        right.y = 0f;
+        forward.Normalize();
+        right.Normalize();
+
+
         Vector3 posDiff = Vector3.zero;
-        if (Input.GetKey(KeyCode.W)) posDiff.z += Time.deltaTime * moveSpeed;
-        if (Input.GetKey(KeyCode.S)) posDiff.z -= Time.deltaTime * moveSpeed;
-        if (Input.GetKey(KeyCode.D)) posDiff.x += Time.deltaTime * moveSpeed;
-        if (Input.GetKey(KeyCode.A)) posDiff.x -= Time.deltaTime * moveSpeed;
+        if (Input.GetKey(KeyCode.W)) posDiff.x += Time.deltaTime * moveSpeed;
+        if (Input.GetKey(KeyCode.S)) posDiff.x -= Time.deltaTime * moveSpeed;
+        if (Input.GetKey(KeyCode.D)) posDiff.z += Time.deltaTime * moveSpeed;
+        if (Input.GetKey(KeyCode.A)) posDiff.z -= Time.deltaTime * moveSpeed;
         if (Input.GetKey(KeyCode.E)) posDiff.y += Time.deltaTime * moveSpeed;
         if (Input.GetKey(KeyCode.Q)) posDiff.y -= Time.deltaTime * moveSpeed;
-        currentObj.transform.position += posDiff;
-        if(currentObject != -2 && posDiff !=  Vector3.zero) shouldReset = true;
+
+        var desiredMoveDirection = forward * posDiff.x + right * posDiff.z;
+
+        currentObj.transform.position += desiredMoveDirection;
+        Debug.Log(posDiff + ", " + desiredMoveDirection);
+        if (currentObject != -2 && posDiff !=  Vector3.zero) shouldReset = true;
 
         Vector3 rotDiff = Vector3.zero;
-        if (Input.GetKey(KeyCode.Z)) rotDiff.x += Time.deltaTime * moveSpeed * 5;
-        if (Input.GetKey(KeyCode.X)) rotDiff.x -= Time.deltaTime * moveSpeed * 5;
-        if (Input.GetKey(KeyCode.C)) rotDiff.y += Time.deltaTime * moveSpeed * 5;
-        if (Input.GetKey(KeyCode.V)) rotDiff.y -= Time.deltaTime * moveSpeed * 5;
-        if (Input.GetKey(KeyCode.B)) rotDiff.z += Time.deltaTime * moveSpeed * 5;
-        if (Input.GetKey(KeyCode.N)) rotDiff.z -= Time.deltaTime * moveSpeed * 5;
+
+        if (mouseControllingRotation)
+        {
+            rotDiff.y += Input.GetAxis("Horizontal") / 10;
+            rotDiff.x -= Input.GetAxis("Vertical") / 10;
+            if (currentObject != -2) { rotDiff.z += Input.GetAxis("Mouse ScrollWheel") * 100; }
+        }
+
+        //if (Input.GetKey(KeyCode.Z)) rotDiff.x += Time.deltaTime * moveSpeed * 5;
+        //if (Input.GetKey(KeyCode.X)) rotDiff.x -= Time.deltaTime * moveSpeed * 5;
+        //if (Input.GetKey(KeyCode.C)) rotDiff.y += Time.deltaTime * moveSpeed * 5;
+        //if (Input.GetKey(KeyCode.V)) rotDiff.y -= Time.deltaTime * moveSpeed * 5;
+        //if (Input.GetKey(KeyCode.B)) rotDiff.z += Time.deltaTime * moveSpeed * 5;
+        //if (Input.GetKey(KeyCode.N)) rotDiff.z -= Time.deltaTime * moveSpeed * 5;
         currentObj.transform.rotation = Quaternion.Euler(currentObj.transform.rotation.eulerAngles + rotDiff);
         if (currentObject != -2 && rotDiff != Vector3.zero) shouldReset = true;
 
         TMP_Text textMeshPro = displayText.GetComponent<TMP_Text>();
-        if(currentObject < 0)
+
+        string controllingText;
+        if (mouseControllingRotation)
         {
-            textMeshPro.text = "[" + (currentObject + 3) + "] " + objectNames[-(currentObject + 1)];
+            controllingText = "(shift) Mouse Controlling Rotation";
         }
         else
         {
-             textMeshPro.text = "[" + (currentObject + 3) + "] Obstacle: " + currentObject.ToString();
+            controllingText = "(shift) Mouse Controlling Cursor";
+
+        }
+
+        if (currentObject < 0)
+        {
+            textMeshPro.text = "[" + (currentObject + 3) + "] " + objectNames[-(currentObject + 1)] + "\n" + controllingText;
+        }
+        else
+        {
+            textMeshPro.text = "[" + (currentObject + 3) + "] Obstacle: " + currentObject.ToString() + "\n" + controllingText;
         }
 
         if(Input.GetKeyDown(KeyCode.Space))
