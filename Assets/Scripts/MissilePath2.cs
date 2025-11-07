@@ -17,9 +17,9 @@ public class MissilePath2 : MonoBehaviour
     public List<Vector3> finalPath;
     private List<int> endNodes;
     public int maxDepth = 3;
-    public float distFromObject = 0.5f;
     public LineDrawer drawer;
     [SerializeField] Toggle lineToggle;
+    [SerializeField] Slider distFromObjSlider;
 
     [System.Serializable]
     public class PathNode
@@ -105,19 +105,27 @@ public class MissilePath2 : MonoBehaviour
        // drawer = gameObject.AddComponent<LineDrawer>();
     }
 
-    public void GeneratePath(Vector3 goal)
+    public void ClearPath()
+    {
+        path.Clear();
+        finalPath.Clear();
+        endNodes.Clear();
+        drawer.BeginFrame();
+    }
+
+    public void GeneratePath(Vector3 start, Vector3 goal)
     {
         int hitForward = 0;
         int hitBack = 0;
 
-        Vector3 objVec = goal - this.transform.position;
+        Vector3 objVec = goal - start;
 
         foreach (RaycastHit hit in Physics.RaycastAll(goal, -objVec, objVec.magnitude))
         {
           //  Debug.Log("Backward: " + hit.point);
             hitBack++;
         }
-        foreach(RaycastHit hit in Physics.RaycastAll(this.transform.position, objVec, objVec.magnitude))
+        foreach(RaycastHit hit in Physics.RaycastAll(start, objVec, objVec.magnitude))
         {
           //  Debug.Log("Forward: " + hit.point);
             hitForward++;
@@ -132,7 +140,7 @@ public class MissilePath2 : MonoBehaviour
         finalPath.Clear();
         endNodes.Clear();
         drawer.BeginFrame();
-        path.Add(new PathNode(this.transform.position, -1)); //-1 = head
+        path.Add(new PathNode(start, -1)); //-1 = head
         path[path.Count - 1].SetDistance(GetPathDistance(path.Count - 1));
 
         Pathfind(path[0], 0, goal, 0, maxDepth);
@@ -220,7 +228,7 @@ public class MissilePath2 : MonoBehaviour
                     Vector3 worldVertex = hit.collider.transform.TransformPoint(vertices[i]);
                     Vector3 center = hit.collider.bounds.center;
                     Vector3 dir = (worldVertex - center).normalized;
-                    float offsetAmount = distFromObject;
+                    float offsetAmount = distFromObjSlider.value;
                     Vector3 offsetVertex = worldVertex + dir * offsetAmount;
 
                     RaycastHit hit2;

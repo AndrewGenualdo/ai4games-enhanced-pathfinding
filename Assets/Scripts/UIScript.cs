@@ -9,12 +9,12 @@ using UnityEngine.UI;
 public class UIScript : MonoBehaviour
 {
     [SerializeField] Button resetButton;
-
+    [SerializeField] bool mouseControllingRotation;
     [SerializeField] Button restartButton;
     [SerializeField] Button addWallButton;
     [SerializeField] Slider colorSlider;
     public LineDrawer drawer;
-
+    [SerializeField] Toggle autoUpdateToggle;
     [SerializeField] Button generatePathButton;
     [SerializeField] GameObject cam;
     [SerializeField] GameObject goal;
@@ -43,7 +43,7 @@ public class UIScript : MonoBehaviour
     private void restart()
     {
         this.gameObject.transform.position = start.transform.position;
-        GeneratePathButton();
+        GetComponent<MissilePath2>().ClearPath();
     }
     private void Reset()
     {
@@ -51,9 +51,11 @@ public class UIScript : MonoBehaviour
     }
     public void GeneratePathButton()
     {
-        GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
+        Vector3 startPos;
+        if(autoUpdateToggle.isOn) {startPos = this.transform.position; }else {startPos = start.transform.position; }
+
+        GetComponent<MissilePath2>().GeneratePath(startPos, goal.transform.position);
         GetComponent<BoidScript>().resetOffsets();
-        GetComponent<BoidScript>().ResetBoids = true;
     }
 
     private void updateColors(float value)
@@ -131,6 +133,6 @@ public class UIScript : MonoBehaviour
             obstacles.Add(Instantiate(obstaclePrefab));
             shouldReset = true;
         }
-        if (shouldReset) GeneratePathButton();
+        if (shouldReset && GetComponent<MissilePath2>().GetPathLength() != 0) GeneratePathButton();
     }
 }

@@ -8,7 +8,7 @@ public class BoidScript : MonoBehaviour
 {
 
     [SerializeField] GameObject BoidTemplate;
-    [SerializeField] public bool ResetBoids = false;
+    [SerializeField] bool ResetBoids = false;
 
     [SerializeField] int NumBoids = 5;
     [SerializeField] float neighborhoodRadius = 5;
@@ -35,10 +35,9 @@ public class BoidScript : MonoBehaviour
     [SerializeField] public GameObject goal;
 
     [SerializeField] public GameObject markerObject;
+    [SerializeField] GameObject start;
 
-     float speed = 2;
 
-     float smoothing = 2;
 
     [SerializeField] Slider colorSlider;
     [SerializeField] Slider speedInput;
@@ -51,16 +50,20 @@ public class BoidScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-       centerObject.GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
+       centerObject.GetComponent<MissilePath2>().GeneratePath(start.transform.position, goal.transform.position);
         speedInput.onValueChanged.AddListener(speedChanged);
     }
 
-     float startTime = 0;
-        float markerTime = 0;
+    float startTime = 0;
+    float markerTime = 0;
+    float time = 0;
+    float timeScale = 1;
+    GameObject markerPlaced;
+
     public void resetOffsets()
     {
         startTime = Time.time;
-        distOffset = 0;
+        time = startTime;
     }
 
     void speedChanged(float value)
@@ -71,33 +74,39 @@ public class BoidScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        float speed = speedInput.value;
+
+        float smoothing = smoothingInput.value;
+
+        time += Time.deltaTime * timeScale; 
         speed = speedInput.value;
 
         //float leng = centerObject.GetComponent<MissilePath2>().GetPathLength();
 
 
-        float baiscDist = ((Time.time - startTime) * speed);
+        float baiscDist = ((time - (startTime)) * speed);
 
         Vector3 closeLoc =  centerObject.transform.position;
-        Vector3 startFarLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(smoothing + baiscDist);
-        float startOfFrameDist = (closeLoc - startFarLoc).magnitude;
-        distOffset = (smoothing / startOfFrameDist) * 10;
-
-        Vector3 farLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(smoothing + baiscDist * distOffset);
-
-
+        Vector3 farLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(smoothing + baiscDist);
         if (centerObject.GetComponent<MissilePath2>().GetPathLength() == 0) { farLoc = this.gameObject.transform.position; }
+
+        float distDiff = (closeLoc - farLoc).magnitude;
+        Debug.Log("start time: " + startTime + " time: " + time + " offset: " + smoothing / distDiff);
+
+     //   if (distDiff > smoothing) {pauseTime += Time.deltaTime; }
+        if (distDiff > smoothing) { timeScale = Mathf.Pow( smoothing / distDiff, 10); }
+
 
  
 
-      //  Debug.Log(startOfFrameDist);
 
         Vector3 smoothedLoc = (closeLoc + (farLoc - closeLoc).normalized * speed * Time.deltaTime); //* (smoothing / Mathf.Abs((closeLoc - farLoc).magnitude)));
 
-        if (Time.time- markerTime>= .5 && startOfFrameDist>= smoothing) 
-        { 
+        if (Time.time - markerTime >= .0) 
+        {
+            if (markerPlaced != null) { Destroy(markerPlaced); }
             centerObject.GetComponent<LineDrawer>().DrawLine(closeLoc, farLoc, Color.HSVToRGB(colorSlider.value, 1, 1), Color.HSVToRGB(colorSlider.value, 1, 1));
-            Instantiate(markerObject, farLoc, Quaternion.identity);
+            markerPlaced = Instantiate(markerObject, farLoc, Quaternion.identity);
             markerTime = Time.time;
         }
 
