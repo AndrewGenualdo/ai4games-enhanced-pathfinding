@@ -36,12 +36,14 @@ public class BoidScript : MonoBehaviour
 
     [SerializeField] public GameObject markerObject;
 
-    [SerializeField] float speed = 1;
+     float speed = 2;
 
-    [SerializeField] float smoothing = 1;
+     float smoothing = 2;
 
     [SerializeField] Slider colorSlider;
     [SerializeField] Toggle lineToggle;
+    [SerializeField] Slider speedInput;
+    [SerializeField] Slider smoothingInput;
 
     List<GameObject> BoidList = new List<GameObject>();
 
@@ -51,6 +53,7 @@ public class BoidScript : MonoBehaviour
     void Start()
     {
        centerObject.GetComponent<MissilePath2>().GeneratePath(goal.transform.position);
+        speedInput.onValueChanged.AddListener(speedChanged);
     }
 
      float startTime = 0;
@@ -60,9 +63,17 @@ public class BoidScript : MonoBehaviour
         startTime = Time.time;
         distOffset = 0;
     }
+
+    void speedChanged(float value)
+    {
+        resetOffsets();
+    }
+
     // Update is called once per frame
     void Update()
     {
+        speed = speedInput.value;
+
         //float leng = centerObject.GetComponent<MissilePath2>().GetPathLength();
         float dist = ((Time.time - startTime) * speed) + distOffset;
 
