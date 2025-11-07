@@ -10,7 +10,6 @@ using UnityEngine.UI;
 public class MissilePath2 : MonoBehaviour
 {   
     [SerializeField] Slider colorSlider;
-    [SerializeField] Toggle lineToggle;
 
     [SerializeField] public List<PathNode> path;
 
@@ -20,6 +19,7 @@ public class MissilePath2 : MonoBehaviour
     public int maxDepth = 3;
     public float distFromObject = 0.5f;
     public LineDrawer drawer;
+    [SerializeField] Toggle lineToggle;
 
     [System.Serializable]
     public class PathNode
@@ -68,6 +68,17 @@ public class MissilePath2 : MonoBehaviour
             this.distance = distance;
         }
     }
+    void lineChanged(bool val)
+    {
+        if (val)
+        {
+            DrawGraph(path[0]);
+        }
+        else
+        {
+            drawer.BeginFrame();
+        }
+    }
 
     float GetPathDistance(int childNode)
     {
@@ -87,6 +98,7 @@ public class MissilePath2 : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
+        lineToggle.onValueChanged.AddListener(lineChanged);
         if (path == null) path = new List<PathNode>();
         if (finalPath == null) finalPath = new List<Vector3>();
         if (endNodes == null) endNodes = new List<int>();
@@ -154,7 +166,7 @@ public class MissilePath2 : MonoBehaviour
         }
 
         drawer.BeginFrame();
-        if(lineToggle.isOn)DrawGraph(path[0]);
+        DrawGraph(path[0]);
 
     }
 

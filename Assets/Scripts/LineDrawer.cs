@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class LineDrawer : MonoBehaviour
 {
+    [SerializeField] Toggle lineToggle;
 
     public Material lineMaterial;
     private List<LineRenderer> lines = new List<LineRenderer>();
@@ -20,8 +22,9 @@ public class LineDrawer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
     }
+
+
 
     public void BeginFrame()
     {
@@ -35,6 +38,8 @@ public class LineDrawer : MonoBehaviour
 
     public void DrawLine(Vector3 start, Vector3 end, Color startColor, Color endColor, float width = 0.02f)
     {
+        if (!lineToggle.isOn) { return; }
+
         LineRenderer line;
         if (currentLine < lines.Count)
         {

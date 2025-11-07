@@ -25,8 +25,10 @@ public class UIScript : MonoBehaviour
     Vector3 startPos;
     List<GameObject> obstacles = new List<GameObject>();
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
+        this.gameObject.transform.position = start.transform.position;
+
         startPos = transform.position;
         generatePathButton.onClick.AddListener(GeneratePathButton);
         resetButton.onClick.AddListener(Reset);

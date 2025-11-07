@@ -1113,7 +1113,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 742031866}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -10.3, y: 0.78, z: 0}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -1210,7 +1210,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 765779125}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9.62, y: 0.71, z: -1.7157415}
+  m_LocalPosition: {x: 8.17, y: 0.71, z: -1.7157415}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -2170,7 +2170,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 10
   m_WholeNumbers: 0
-  m_Value: 0
+  m_Value: 2
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -2396,9 +2396,9 @@ MonoBehaviour:
   goal: {fileID: 765779125}
   markerObject: {fileID: 8467499806598880376, guid: 92b129f7e9a4b8b40ac1879bd77fc887, type: 3}
   colorSlider: {fileID: 1602413515}
-  lineToggle: {fileID: 29213413}
-  speedInput: {fileID: 0}
-  smoothingInput: {fileID: 0}
+  speedInput: {fileID: 1761462007}
+  smoothingInput: {fileID: 1509205656}
+  distOffset: 0
 --- !u!4 &1669185136
 Transform:
   m_ObjectHideFlags: 0
@@ -2428,12 +2428,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   colorSlider: {fileID: 1602413515}
-  lineToggle: {fileID: 29213413}
   path: []
   finalPath: []
   maxDepth: 143
   distFromObject: 1
   drawer: {fileID: 1669185139}
+  lineToggle: {fileID: 29213413}
 --- !u!114 &1669185138
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2470,6 +2470,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9235f9b4702bbb4ea1dfe71c01fae7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lineToggle: {fileID: 29213413}
   lineMaterial: {fileID: 0}
 --- !u!1 &1678246937
 GameObject:
@@ -2681,7 +2682,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 10
   m_WholeNumbers: 0
-  m_Value: 0
+  m_Value: 2
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []

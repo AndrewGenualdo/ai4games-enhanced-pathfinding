@@ -41,13 +41,12 @@ public class BoidScript : MonoBehaviour
      float smoothing = 2;
 
     [SerializeField] Slider colorSlider;
-    [SerializeField] Toggle lineToggle;
     [SerializeField] Slider speedInput;
     [SerializeField] Slider smoothingInput;
 
     List<GameObject> BoidList = new List<GameObject>();
 
-    float distOffset = 0;
+   public float distOffset = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -75,18 +74,30 @@ public class BoidScript : MonoBehaviour
         speed = speedInput.value;
 
         //float leng = centerObject.GetComponent<MissilePath2>().GetPathLength();
-        float dist = ((Time.time - startTime) * speed) + distOffset;
+
+
+        float baiscDist = ((Time.time - startTime) * speed);
 
         Vector3 closeLoc =  centerObject.transform.position;
-        Vector3 farLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(smoothing + dist);
-        distOffset += smoothing - (closeLoc - farLoc).magnitude;
+        Vector3 startFarLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(smoothing + baiscDist);
+        float startOfFrameDist = (closeLoc - startFarLoc).magnitude;
+        distOffset = (smoothing / startOfFrameDist) * 10;
+
+        Vector3 farLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(smoothing + baiscDist * distOffset);
+
+
+        if (centerObject.GetComponent<MissilePath2>().GetPathLength() == 0) { farLoc = this.gameObject.transform.position; }
+
+ 
+
+      //  Debug.Log(startOfFrameDist);
 
         Vector3 smoothedLoc = (closeLoc + (farLoc - closeLoc).normalized * speed * Time.deltaTime); //* (smoothing / Mathf.Abs((closeLoc - farLoc).magnitude)));
 
-        if (Time.time- markerTime>= .5 && lineToggle.isOn) 
+        if (Time.time- markerTime>= .5 && startOfFrameDist>= smoothing) 
         { 
             centerObject.GetComponent<LineDrawer>().DrawLine(closeLoc, farLoc, Color.HSVToRGB(colorSlider.value, 1, 1), Color.HSVToRGB(colorSlider.value, 1, 1));
-         //   Instantiate(markerObject, farLoc, Quaternion.identity);
+            Instantiate(markerObject, farLoc, Quaternion.identity);
             markerTime = Time.time;
         }
 
