@@ -4,7 +4,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BoidScript : MonoBehaviour
+public class BoidScript : MonoBehaviour // everything in this file is made by anders
 {
 
     [SerializeField] GameObject BoidTemplate;
@@ -47,7 +47,6 @@ public class BoidScript : MonoBehaviour
 
    public float distOffset = 0;
 
-    // Start is called before the first frame update
     void Start()
     {
        centerObject.GetComponent<MissilePath2>().GeneratePath(start.transform.position, goal.transform.position);
@@ -60,7 +59,7 @@ public class BoidScript : MonoBehaviour
     float timeScale = 1;
     GameObject markerPlaced;
 
-    public void resetOffsets()
+    public void resetOffsets() // for when the path regenerates so it starts from where it is
     {
         startTime = Time.time;
         time = startTime;
@@ -71,30 +70,25 @@ public class BoidScript : MonoBehaviour
         resetOffsets();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        float speed = speedInput.value;
+        float speed = speedInput.value; // set variables from the UI
 
         float smoothing = smoothingInput.value;
 
-        time += Time.deltaTime * timeScale; 
-        speed = speedInput.value;
-
-        //float leng = centerObject.GetComponent<MissilePath2>().GetPathLength();
+        time += Time.deltaTime * timeScale; // add the time scaled by how close it is
 
 
-        float baiscDist = ((time - (startTime)) * speed);
+
+        float baiscDist = ((time - (startTime)) * speed); // where it would be without smoothing
 
         Vector3 closeLoc =  centerObject.transform.position;
-        Vector3 farLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(smoothing + baiscDist);
+
+        Vector3 farLoc = centerObject.GetComponent<MissilePath2>().GetPathLocation(smoothing + baiscDist); // the smoothing lead point
         if (centerObject.GetComponent<MissilePath2>().GetPathLength() == 0) { farLoc = this.gameObject.transform.position; }
 
-        float distDiff = (closeLoc - farLoc).magnitude;
-       // Debug.Log("start time: " + startTime + " time: " + time + " offset: " + smoothing / distDiff);
-
-     //   if (distDiff > smoothing) {pauseTime += Time.deltaTime; }
-        if (distDiff > smoothing) { timeScale = Mathf.Pow( smoothing / distDiff, 10); }
+        float distDiff = (closeLoc - farLoc).magnitude; // accelerates or decelerates the center agent based on how close it is to the smoothing point, pow to aplify the effect
+        if (distDiff > smoothing) { timeScale = Mathf.Pow( smoothing / distDiff, 3); }
 
 
  
@@ -102,18 +96,18 @@ public class BoidScript : MonoBehaviour
 
         Vector3 smoothedLoc = (closeLoc + (farLoc - closeLoc).normalized * speed * Time.deltaTime); //* (smoothing / Mathf.Abs((closeLoc - farLoc).magnitude)));
 
-        if (Time.time - markerTime >= .0) 
+        if (Time.time - markerTime >= .0) // draws the lines to show the smoothed path
         {
-            if (markerPlaced != null) { Destroy(markerPlaced); }
+           // if (markerPlaced != null) { Destroy(markerPlaced); } // this was used for debugging
             centerObject.GetComponent<LineDrawer>().DrawLine(closeLoc, farLoc, Color.HSVToRGB(colorSlider.value, 1, 1), Color.HSVToRGB(colorSlider.value, 1, 1));
-            markerPlaced = Instantiate(markerObject, farLoc, Quaternion.identity);
+           // markerPlaced = Instantiate(markerObject, farLoc, Quaternion.identity);
             markerTime = Time.time;
         }
 
         centerObject.transform.position = smoothedLoc;
 
 
-        if (ResetBoids)
+        if (ResetBoids) // used to debug if the boids went crazy and flew off into space
         {
             foreach (GameObject boid in BoidList)
             {
@@ -123,19 +117,20 @@ public class BoidScript : MonoBehaviour
             ResetBoids = false;
         }
 
-        while (BoidList.Count < NumBoids)
+        while (BoidList.Count < NumBoids) // adds new boids
         {
             BoidList.Add(Instantiate(BoidTemplate, centerObject.transform.position + Random.onUnitSphere * Random.Range(0, neighborhoodRadius / 2), Quaternion.identity));
             BoidList[BoidList.Count - 1].GetComponent<Rigidbody>().velocity = Random.onUnitSphere * Random.Range(0, maximumVelocity);
         }
 
-        while (BoidList.Count > NumBoids)
+        while (BoidList.Count > NumBoids) // deletes extra boids
         {
             GameObject BoidToDelete = BoidList[0];
             BoidList.Remove(BoidToDelete);
             Destroy(BoidToDelete);
         }
-        foreach (var boid in BoidList)
+
+        foreach (var boid in BoidList) // adds the forces to each of the boids
         { 
             if (cohesionEnabled) { CalculateCohesion(boid); }
             if (separationEnabled) { CalculateSepartaion(boid); }
@@ -147,7 +142,7 @@ public class BoidScript : MonoBehaviour
         }
     }
 
-    List<GameObject> GetNeighbors (GameObject thisBoid,float distance)
+    List<GameObject> GetNeighbors (GameObject thisBoid,float distance) // returns a list of boids within the radius
     {
         Vector3 position = thisBoid.transform.position;
 
@@ -234,7 +229,7 @@ public class BoidScript : MonoBehaviour
         
     }
 
-    void AddRandomForce(GameObject boid)
+    void AddRandomForce(GameObject boid) // adds noise to knock them out of stable patterns
     {
 
             Vector3 force = Vector3.zero;

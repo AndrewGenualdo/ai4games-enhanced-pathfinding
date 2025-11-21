@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class UIScript : MonoBehaviour
+public class UIScript : MonoBehaviour // everything in the file is made by Andrew except for blocks specifically labeled as being made by Anders
 {
     [SerializeField] Button resetButton;
     [SerializeField] bool mouseControllingRotation;
@@ -34,12 +34,9 @@ public class UIScript : MonoBehaviour
         resetButton.onClick.AddListener(Reset);
 
         restartButton.onClick.AddListener(restart);
-        colorSlider.onValueChanged.AddListener(updateColors);
+        colorSlider.onValueChanged.AddListener(updateColors); // anders
     }
 
-    private void AddWall()
-    {
-    }
     private void restart()
     {
         this.gameObject.transform.position = start.transform.position;
@@ -58,7 +55,7 @@ public class UIScript : MonoBehaviour
         GetComponent<BoidScript>().resetOffsets();
     }
 
-    private void updateColors(float value)
+    private void updateColors(float value) // added by anders to make the color switch when you update them with the UI
     {
         colorSlider.GetComponentInChildren<Image>().color = Color.HSVToRGB(value, 1, 1);
         drawer.setColor(Color.HSVToRGB(value, 1, 1));
@@ -107,7 +104,7 @@ public class UIScript : MonoBehaviour
             currentObj = obstacles[currentObject];
         }
 
-        var forward = cam.transform.forward;
+        var forward = cam.transform.forward;// added by Anders - moves the object relative to the axis that the camera is to avoid input confusion, used this unity discussion post as a resource https://discussions.unity.com/t/moving-character-relative-to-camera/614923
         var right = cam.transform.right;
         forward.y = 0f;
         right.y = 0f;
@@ -123,40 +120,43 @@ public class UIScript : MonoBehaviour
         if (Input.GetKey(KeyCode.E)) posDiff.y += Time.deltaTime * moveSpeed;
         if (Input.GetKey(KeyCode.Q)) posDiff.y -= Time.deltaTime * moveSpeed;
 
-        var desiredMoveDirection = forward * posDiff.x + right * posDiff.z;
+        var desiredMoveDirection = forward * posDiff.x + right * posDiff.z;  // the math for the angle adjusted movement
 
-        currentObj.transform.position += desiredMoveDirection;
+        currentObj.transform.position += desiredMoveDirection; 
         Debug.Log(posDiff + ", " + desiredMoveDirection);
         if (currentObject != -2 && posDiff !=  Vector3.zero) shouldReset = true;
 
         Vector3 rotDiff = Vector3.zero;
 
-        if (mouseControllingRotation)
+
+
+        if (mouseControllingRotation) //  Anders - Removed keyboard roations inputs in favor of mouse inputs
         {
             rotDiff.y += Input.GetAxis("Horizontal") / 10;
             rotDiff.x -= Input.GetAxis("Vertical") / 10;
             if (currentObject != -2) { rotDiff.z += Input.GetAxis("Mouse ScrollWheel") * 100; }
         }
-
         //if (Input.GetKey(KeyCode.Z)) rotDiff.x += Time.deltaTime * moveSpeed * 5;
         //if (Input.GetKey(KeyCode.X)) rotDiff.x -= Time.deltaTime * moveSpeed * 5;
         //if (Input.GetKey(KeyCode.C)) rotDiff.y += Time.deltaTime * moveSpeed * 5;
         //if (Input.GetKey(KeyCode.V)) rotDiff.y -= Time.deltaTime * moveSpeed * 5;
         //if (Input.GetKey(KeyCode.B)) rotDiff.z += Time.deltaTime * moveSpeed * 5;
         //if (Input.GetKey(KeyCode.N)) rotDiff.z -= Time.deltaTime * moveSpeed * 5;
+
+
         currentObj.transform.rotation = Quaternion.Euler(currentObj.transform.rotation.eulerAngles + rotDiff);
         if (currentObject != -2 && rotDiff != Vector3.zero) shouldReset = true;
 
         TMP_Text textMeshPro = displayText.GetComponent<TMP_Text>();
 
         string controllingText;
-        if (mouseControllingRotation)
+        if (mouseControllingRotation) // anders - UI so you know what you're controlling with your mouse
         {
-            controllingText = "(shift) Mouse Controlling Rotation";
+            controllingText = "Mouse Controlling Rotation";
         }
         else
         {
-            controllingText = "(shift) Mouse Controlling Cursor";
+            controllingText = "Mouse Controlling Cursor";
 
         }
 

@@ -7,7 +7,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MissilePath2 : MonoBehaviour
+public class MissilePath2 : MonoBehaviour // everything in the file was implemented by Andrew, though there were contributions to the logic of the pathfinding by Anders as well
 {   
     [SerializeField] Slider colorSlider;
 

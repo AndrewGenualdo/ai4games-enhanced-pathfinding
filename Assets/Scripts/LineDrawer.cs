@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LineDrawer : MonoBehaviour
+public class LineDrawer : MonoBehaviour // everything in the file was made by Andrew, with the exception of setColor
 {
     [SerializeField] Toggle lineToggle;
 
@@ -18,12 +18,6 @@ public class LineDrawer : MonoBehaviour
             lineMaterial = new Material(Shader.Find("Sprites/Default"));
         }
     }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
-
 
 
     public void BeginFrame()
@@ -66,7 +60,7 @@ public class LineDrawer : MonoBehaviour
         currentLine++;
     }
 
-    public void setColor(Color color)
+    public void setColor(Color color) // made by anders
     {
         foreach(LineRenderer line in lines)
         {
@@ -76,9 +70,5 @@ public class LineDrawer : MonoBehaviour
         }
 
     }
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
 }
